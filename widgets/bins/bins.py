@@ -1,7 +1,7 @@
 import pandas as pd
 import os
-from app.resources.selenium import SeleniumDriver
-from app.resources.sqlite import update_sql_widget
+from resources.selenium import SeleniumDriver
+from resources.sqlite import update_sql_widget
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait

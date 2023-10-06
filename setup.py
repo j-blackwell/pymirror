@@ -4,7 +4,7 @@ setup(
     name="pymirror",
     version="1!0+dev",
     author_email="jrstats@outlook.com",
-    packages=["app"],
+    packages=["app", "resources", "widgets"],
     install_requires=[
         "fastapi[all]",
         "uvicorn[standard]",
