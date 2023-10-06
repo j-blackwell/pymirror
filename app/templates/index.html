@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Mirror</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: black;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        .widget {
+            padding: 20px;
+        }
+        .left-widgets, .right-widgets {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 150px; /* Adjust width as needed */
+        }
+        .main-content {
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        function getSecondsUntilNextMinute() {
+            var now = new Date();
+            return 60 - now.getSeconds();
+        }
+
+        function refreshAtNextMinute() {
+            setTimeout(function() {
+                location.reload();
+            }, getSecondsUntilNextMinute() * 1000);
+        }
+
+        refreshAtNextMinute();
+    </script>
+    <div class="left-widgets widget">
+        {% for widget_content in left_widgets %}
+            <div>{{ widget_content|safe }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="main-content">
+        <!-- Main Content or Black Mirror Surface -->
+    </div>
+
+    <div class="right-widgets widget">
+        {% for widget_content in right_widgets %}
+            <div>{{ widget_content|safe }}</div>
+        {% endfor %}
+    </div>
+    
+</body>
+</html>

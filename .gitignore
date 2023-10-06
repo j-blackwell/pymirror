@@ -1,0 +1,6 @@
+venv
+.env
+playground
+__pycache__
+*.db
+*.egg-info
