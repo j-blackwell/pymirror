@@ -18,7 +18,10 @@ def get_sql_widget_html(widget_name, con):
     cursor = con.cursor()
     cursor.execute("SELECT html_content FROM widgets WHERE widget_name=?", (widget_name,))
     widget = cursor.fetchone()
-    return widget[0]
+    try:
+        return widget[0]
+    except:
+        return f"<div>No data for {widget_name} widget</div>"
 
 def get_all_sql_widgets_html(widget_names):
     with Sqlite() as con:
