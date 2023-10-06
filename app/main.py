@@ -13,18 +13,14 @@ async def home(request: Request):
     # Example time and date retrieval:
     current_time = datetime.now().strftime("%H:%M")
     current_date = datetime.now().strftime("%Y-%m-%d")
-    all_widgets = get_all_sql_widgets_html(["bins"])
+    all_widgets = get_all_sql_widgets_html(["bins", "weather_current", "weather_daily"])
     left_widgets = [
         f"<div>Time: {current_time}</div>",
         f"<div>Date: {current_date}</div>",
         # Add more left widgets here
     ]
 
-    right_widgets = [
-        "<div>Weather: Sunny</div>",
-        "<div>Temperature: 25°C</div>",
-        # Add more right widgets here
-    ] + all_widgets
+    right_widgets = all_widgets
 
     return templates.TemplateResponse(
         "index.html", 
