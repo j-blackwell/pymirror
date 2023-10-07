@@ -14,7 +14,7 @@ async def home(request: Request):
     # Example time and date retrieval:
     datetime_widget = get_datetime_widget()
     right_widgets = get_all_sql_widgets_html(["bins", "weather_current", "weather_daily"])
-    left_widgets = [datetime_widget] + get_all_sql_widgets_html(["tfl_status"])
+    left_widgets = [datetime_widget] + get_all_sql_widgets_html(["tfl_departures", "tfl_status"])
 
 
     return templates.TemplateResponse(
