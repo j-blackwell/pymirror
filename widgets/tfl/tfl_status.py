@@ -5,9 +5,9 @@ import requests
 from glom import glom
 from dotenv import load_dotenv
 
-from resources.selenium import SeleniumDriver
 from resources.sqlite import update_sql_widget
 from widgets.tfl.helpers import convert_tfl_dates
+from widgets.tfl.tfl_html import status_html
 
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
 load_dotenv(dotenv_path)
@@ -17,7 +17,7 @@ TIMEZONE = os.getenv("TIMEZONE")
 def update_tfl_status():
     line_status_info = get_tfl_status(TFL_LINE_IDS)
     line_status_df = transform_tfl_status(line_status_info)
-    update_sql_widget("tfl_status", line_status_df, pd.DataFrame.to_html, index=False)
+    update_sql_widget("tfl_status", line_status_df, status_html)
 
 def get_tfl_status(line_ids):
     # Define the URL to fetch line status

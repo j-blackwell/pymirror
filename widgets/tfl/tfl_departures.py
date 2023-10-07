@@ -5,6 +5,7 @@ from itertools import chain
 from dotenv import load_dotenv
 from resources.sqlite import update_sql_widget
 from widgets.tfl.helpers import convert_tfl_dates
+from widgets.tfl.tfl_html import departures_html
 
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
 load_dotenv(dotenv_path)
@@ -18,7 +19,7 @@ def update_tfl_departures():
     ]
     departures_list = list(chain.from_iterable(departures))
     departures_df = transform_tfl_departures(departures_list)
-    update_sql_widget("tfl_departures", departures_df, pd.DataFrame.to_html, index=False)
+    update_sql_widget("tfl_departures", departures_df, departures_html)
 
 
 def get_tfl_departures(station_id, direction):
@@ -40,6 +41,7 @@ def get_tfl_departures(station_id, direction):
         )
         
         keys_to_keep = [
+            "stationName",
             "destinationName",
             "lineName",
             "expectedArrival"
@@ -65,6 +67,8 @@ def transform_tfl_departures(departures):
         pd.DataFrame(departures)
         .assign(expectedArrivalLocal=lambda df: convert_tfl_dates(df["expectedArrival"]))
         .drop(["expectedArrival"], axis=1)
+        .assign(stationName=lambda df: df["stationName"].str.replace(" Rail", "").str.replace(" Station", ""))
+        .assign(destinationName=lambda df: df["destinationName"].str.replace(" Rail", "").str.replace(" Station", ""))
     )
 
     return df
