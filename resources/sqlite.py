@@ -31,7 +31,7 @@ def get_all_sql_widgets_html(widget_names):
 def update_sql_widget(widget_name: str, df: pd.DataFrame, fn: Callable, **kwargs) -> None:
     with Sqlite() as con:
         cursor = con.cursor()
-        df.to_sql(widget_name, con=con, if_exists="replace")
+        df.to_sql(widget_name, con=con, if_exists="replace", index=False)
 
         df_html = fn(df, **kwargs)
         updated_timestamp = dt.datetime.now()
