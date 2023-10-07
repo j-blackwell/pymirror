@@ -3,8 +3,14 @@ import requests
 import json
 import datetime as dt
 import os
-from resources.selenium import SeleniumDriver
+from dotenv import load_dotenv
 from resources.sqlite import update_sql_widget
+from widgets.weather.weather_html import weather_current_html
+
+
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
+load_dotenv(dotenv_path)
+
 
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 WEATHER_LAT = os.getenv("WEATHER_LAT")
@@ -15,7 +21,7 @@ DESIRED_FIELDS = ["feels_like", "weather", "uvi", "pop"]
 def update_weather():
     raw_weather = get_weather()
     current_df, daily_df = transform_weather(raw_weather)
-    update_sql_widget("weather_current", current_df, pd.DataFrame.to_html, index=False)
+    update_sql_widget("weather_current", current_df, weather_current_html)
     update_sql_widget("weather_daily", daily_df, pd.DataFrame.to_html, index=False)
 
 def get_weather():
