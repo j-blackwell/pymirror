@@ -16,7 +16,8 @@ setup(
         "webdriver-manager",
         "lxml",
         "html5lib",
-        "beautifulsoup4"
+        "beautifulsoup4",
+        "glom"
     ],
     author="James Robinson",
     license="Apache-2.0",

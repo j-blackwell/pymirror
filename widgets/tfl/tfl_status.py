@@ -1,21 +1,27 @@
+import datetime as dt
 import pandas as pd
 import os
 import requests
+from glom import glom
+from dotenv import load_dotenv
+
 from resources.selenium import SeleniumDriver
 from resources.sqlite import update_sql_widget
+from widgets.tfl.helpers import convert_tfl_dates
 
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
+load_dotenv(dotenv_path)
 TFL_LINE_IDS = os.getenv("TFL_LINE_IDS")
-
+TIMEZONE = os.getenv("TIMEZONE")
 
 def update_tfl_status():
-    line_ids = TFL_LINE_IDS.split(",")
-    line_status_info = [{"line": line,  **get_tfl_status(line)} for line in line_ids]
+    line_status_info = get_tfl_status(TFL_LINE_IDS)
     line_status_df = transform_tfl_status(line_status_info)
-    update_sql_widget("line_status", line_status_df, pd.DataFrame.to_html, index=False)
+    update_sql_widget("tfl_status", line_status_df, pd.DataFrame.to_html, index=False)
 
-def get_tfl_status(line_id):
+def get_tfl_status(line_ids):
     # Define the URL to fetch line status
-    url = f"https://api.tfl.gov.uk/Line/{line_id}/Status"
+    url = f"https://api.tfl.gov.uk/Line/{line_ids}/Status"
     
     # Send the request and get the response
     response = requests.get(url)
@@ -24,18 +30,34 @@ def get_tfl_status(line_id):
     if response.status_code == 200:
         # Parse the JSON response
         data = response.json()
+
+        line_status = [
+            {
+                "line": glom(status, "name"),
+                "status": glom(status, "lineStatuses.0.statusSeverityDescription", default="None"),
+                "disruption": glom(status, "lineStatuses.0.disruption.categoryDescription", default="None"),
+                "reason": glom(status, "lineStatuses.0.disruption.description", default="None"),
+                "validity_from": glom(status, "lineStatuses.0.validityPeriods.0.fromDate", default="None"),
+                "validity_to": glom(status, "lineStatuses.0.validityPeriods.0.toDate", default="None"),
+            }
+            for status in data
+        ]
         
-        line_status = data[0]['lineStatuses'][0]['statusSeverityDescription']
-        line_status_details = data[0]['lineStatuses'][0].get('reason', 'No further details provided')
-        
-        return {"status": line_status, "details": line_status_details}
+        return line_status
     else:
         # Handle possible errors, such as API changes or network issues
         print(f"Failed to retrieve data: {response.status_code}")
         return {"status": None, "details": None}
     
-def transform_tfl_status(raw_df):
-    return pd.DataFrame(raw_df)
+
+    
+def transform_tfl_status(line_status):
+    df = (
+        pd.DataFrame(line_status)
+        .assign(validity_from=lambda df: convert_tfl_dates(df["validity_from"])) 
+        .assign(validity_to=lambda df: convert_tfl_dates(df["validity_to"])) 
+    )
+    return df
 
 if __name__ == "__main__":
     update_tfl_status()
