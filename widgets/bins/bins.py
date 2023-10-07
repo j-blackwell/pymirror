@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from widgets.bins.bins_html import bins_html
 from resources.selenium import SeleniumDriver
 from resources.sqlite import update_sql_widget
 from selenium.webdriver.common.by import By
@@ -14,7 +15,7 @@ POST_CODE = os.getenv("POST_CODE")
 def update_bins():
     raw_df = get_bins()
     bins_df = transform_bins(raw_df)
-    update_sql_widget("bins", bins_df, pd.DataFrame.to_html, index=False)
+    update_sql_widget("bins", bins_df, bins_html)
 
 def get_bins():
     with SeleniumDriver() as driver:
