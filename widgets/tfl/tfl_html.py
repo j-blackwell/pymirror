@@ -3,6 +3,7 @@ import pandas as pd
 def departures_html(df: pd.DataFrame) -> str:
     df_sorted = (
         df
+        .assign(expectedArrivalLocal=lambda df: pd.to_datetime(df["expectedArrivalLocal"]))
         .sort_values(["lineName", "expectedArrivalLocal"])
         .groupby(["lineName"])
     )
