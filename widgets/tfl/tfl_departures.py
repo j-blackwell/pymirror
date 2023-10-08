@@ -67,8 +67,8 @@ def transform_tfl_departures(departures):
         pd.DataFrame(departures)
         .assign(expectedArrivalLocal=lambda df: convert_tfl_dates(df["expectedArrival"]))
         .drop(["expectedArrival"], axis=1)
-        .assign(stationName=lambda df: df["stationName"].str.replace(" Rail", "").str.replace(" Station", ""))
-        .assign(destinationName=lambda df: df["destinationName"].str.replace(" Rail", "").str.replace(" Station", ""))
+        .assign(stationName=lambda df: df["stationName"].str.replace(" Rail", "").str.replace(" Station", "").str.replace("London ", ""))
+        .assign(destinationName=lambda df: df["destinationName"].str.replace(" Rail", "").str.replace(" Station", "").str.replace("London ", ""))
     )
 
     return df
