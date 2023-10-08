@@ -18,7 +18,8 @@ The second service is to run the python script that handles the widget updates.
 python3 ./widgets/update.py
 ```
 
-## .env
+
+## ENV vars needed
 
 - SQLITE
 - WEATHER_API_KEY
