@@ -1,7 +1,7 @@
 import datetime as dt
 
-def get_datetime_widget():
 
+def get_datetime_widget():
     current_time = dt.datetime.now().strftime("%H:%M")
     current_date = dt.datetime.now().strftime("%Y-%m-%d")
     datetime_widget = f"""

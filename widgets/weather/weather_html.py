@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def weather_current_html(df: pd.DataFrame) -> str:
     html_all = "<h3>Current Weather</h3>\n<ul>"
     for idx, row in df.iterrows():

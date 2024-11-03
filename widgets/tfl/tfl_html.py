@@ -1,14 +1,25 @@
 import pandas as pd
+import datetime as dt
+
 
 def departures_html(df: pd.DataFrame) -> str:
     df_sorted = (
-        df
-        .assign(expectedArrivalLocal=lambda df: pd.to_datetime(df["expectedArrivalLocal"]))
+        df.loc[
+            lambda df: pd.to_datetime(df["expectedArrival"])
+            > pd.Timestamp("now", tz="UTC")
+        ]
+        .assign(
+            expectedArrivalLocal=lambda df: pd.to_datetime(df["expectedArrivalLocal"])
+        )
         .sort_values(["lineName", "expectedArrivalLocal"])
-        .groupby(["lineName"])
     )
 
-    dfs = {x: df_sorted.get_group(x) for x in df_sorted.groups}
+    if df_sorted.shape[0] == 0:
+        return "<h4>No departures</h4>"
+
+    df_grouped = df_sorted.groupby(["lineName"])
+
+    dfs = {x: df_grouped.get_group(x) for x in df_grouped.groups}
     html_all = ""
     for line, departures in dfs.items():
         html = f"\n<h4>{departures.iloc[0]['stationName']} ({line})</h4>\n<ol>"
@@ -26,7 +37,7 @@ def status_html(df: pd.DataFrame) -> str:
     for idx, row in df.iterrows():
         html_all += f"\n<li>{row['line']} - {row['status']}"
 
-        if row['status'] == "Good Service":
+        if row["status"] == "Good Service":
             html_all += "</li>"
         else:
             # html_all += f"""<ul>

@@ -4,32 +4,34 @@ import os
 import requests
 import re
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 from resources.sqlite import update_sql_widget
+from widgets.football.football_html import (
+    football_latest_result_html,
+    football_next_fixture_html,
+)
 
-dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
-load_dotenv(dotenv_path)
-TEAM_ID = os.getenv("TEAM_ID")
+TEAM_ID = dotenv_values()["TEAM_ID"]
 
-SEASON_MAPPING = {
-    "Leicester City": "Burnley",
-    "Leeds United": "Sheffield Utd",
-    "Southampton": "Luton Town"
-}
-
-POINTS_MAPPING = {
-    "W": 3,
-    "D": 1,
-    "L": 0
-}
+POINTS_MAPPING = {"W": 3, "D": 1, "L": 0}
 
 
 def update_football_matches():
     matches, matches_prev = get_football_matches()
-    latest_result, next_fixture, result_comparison = transform_football_matches(matches, matches_prev)
-    update_sql_widget("football_latest_result", latest_result, pd.DataFrame.to_html, index=False)
-    update_sql_widget("football_next_fixture", next_fixture, pd.DataFrame.to_html, index=False)
-    update_sql_widget("football_result_comparison", result_comparison, pd.DataFrame.to_html, index=False)
+    latest_result, next_fixture, result_comparison = transform_football_matches(
+        matches, matches_prev
+    )
+    update_sql_widget(
+        "football_latest_result", latest_result, football_latest_result_html
+    )
+    update_sql_widget("football_next_fixture", next_fixture, football_next_fixture_html)
+    update_sql_widget(
+        "football_result_comparison",
+        result_comparison,
+        pd.DataFrame.to_html,
+        index=False,
+    )
+
 
 def get_team_matches(url):
     response = requests.get(url)
@@ -41,24 +43,32 @@ def get_team_matches(url):
 
     return matches, soup
 
-def get_football_matches():
 
+def get_football_matches():
     # this season
     url = f"https://fbref.com/en/squads/{TEAM_ID}"
     matches, soup = get_team_matches(url)
 
-    # prev season
+    # prev season
     endpoint = soup.find("div", attrs={"class": "prevnext"}).find("a").attrs["href"]
     url_prev = f"https://fbref.com" + endpoint
     matches_prev, _ = get_team_matches(url_prev)
 
     return matches, matches_prev
 
+
 def transform_football_matches(matches, matches_prev):
     home_away_matches = (
-        matches
-        .assign(home_team=lambda df: np.where(df["Venue"] == "Home", df["Team"], df["Opponent"]))
-        .assign(away_team=lambda df: np.where(df["Venue"] == "Home", df["Opponent"], df["Team"]))
+        matches.assign(
+            home_team=lambda df: np.where(
+                df["Venue"] == "Home", df["Team"], df["Opponent"]
+            )
+        )
+        .assign(
+            away_team=lambda df: np.where(
+                df["Venue"] == "Home", df["Opponent"], df["Team"]
+            )
+        )
         .assign(home_g=lambda df: np.where(df["Venue"] == "Home", df["GF"], df["GA"]))
         .assign(away_g=lambda df: np.where(df["Venue"] == "Home", df["GA"], df["GF"]))
         .assign(home_xg=lambda df: np.where(df["Venue"] == "Home", df["xG"], df["xGA"]))
@@ -66,52 +76,63 @@ def transform_football_matches(matches, matches_prev):
     )
 
     result_comparison = (
-        matches_prev
-        .assign(Opponent_current=lambda df: df["Opponent"].map(SEASON_MAPPING).fillna(df["Opponent"]))
-        .merge(
-            matches, 
-            how="right", 
-            left_on=["Comp", "Venue", "Opponent_current"], 
-            right_on=["Comp", "Venue", "Opponent"], 
-            suffixes=("_prev", ""))
+        matches_prev        .merge(
+            matches,
+            how="right",
+            left_on=["Comp", "Venue", "Opponent"],
+            right_on=["Comp", "Venue", "Opponent"],
+            suffixes=("_prev", ""),
+        )
         .assign(points=lambda df: df["Result"].map(POINTS_MAPPING))
         .assign(points_prev=lambda df: df["Result_prev"].map(POINTS_MAPPING))
         .assign(points_diff=lambda df: df["points"] - df["points_prev"])
-        .loc[lambda df: df["Comp"] == "Premier League"]
-        # .loc[lambda df: df["points_diff"].notna()]
-        [["Comp", "Opponent", "Venue", "Result", "Result_prev", "points", "points_prev", "points_diff"]]
+        .loc[lambda df: df["Comp"] == "Premier League"][
+            # .loc[lambda df: df["points_diff"].notna()]
+            [
+                "Comp",
+                "Opponent",
+                "Venue",
+                "Result",
+                "Result_prev",
+                "points",
+                "points_prev",
+                "points_diff",
+            ]
+        ]
     )
 
     latest_result = (
-        home_away_matches
-        .loc[lambda df: df["Result"].notna()]
+        home_away_matches.loc[lambda df: df["Result"].notna()]
         .assign(datetime=lambda df: df["Date"] + " " + df["Time"])
-        .tail(1)
-        [["datetime", "home_team", "away_team", "home_g", "away_g", "home_xg", "away_xg"]]
+        .tail(1)[
+            [
+                "datetime",
+                "home_team",
+                "away_team",
+                "home_g",
+                "away_g",
+                "home_xg",
+                "away_xg",
+            ]
+        ]
     )
 
-    form = (
-        home_away_matches
-        .loc[lambda df: df["Result"].notna()]
-        ["Result"]
-        [-5:]
-    )
+    form = home_away_matches.loc[lambda df: df["Result"].notna()]["Result"][-5:]
 
     next_fixture = (
-        home_away_matches
-        .loc[lambda df: df["Result"].isna()]
+        home_away_matches.loc[lambda df: df["Result"].isna()]
         .head(1)
         .merge(
-            result_comparison, 
-            how="left", 
+            result_comparison,
+            how="left",
             left_on=["Comp", "Opponent", "Venue"],
-            right_on=["Comp", "Opponent", "Venue"]
+            right_on=["Comp", "Opponent", "Venue"],
         )
         .assign(datetime=lambda df: df["Date"] + " " + df["Time"])
-        .assign(form="".join(form))
-        [["datetime", "home_team", "away_team", "form", "Result_prev"]]
+        .assign(form="".join(form))[
+            ["datetime", "home_team", "away_team", "form", "Result_prev"]
+        ]
     )
-
 
     return latest_result, next_fixture, result_comparison
 

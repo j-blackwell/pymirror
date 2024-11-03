@@ -28,6 +28,7 @@ def football_latest_result_html(df: pd.DataFrame) -> str:
 
     return html_all
 
+
 def football_next_fixture_html(df: pd.DataFrame) -> str:
     row = df.iloc[0]
     html_all = f"""<div class="football">

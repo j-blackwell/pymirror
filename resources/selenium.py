@@ -5,7 +5,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 class SeleniumDriver:
-
     def _set_options(self):
         self.options = ChromeOptions()
 
