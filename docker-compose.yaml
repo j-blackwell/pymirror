@@ -1,0 +1,19 @@
+version: '3.8'
+
+volumes:
+  shared-data:
+
+services:
+  daemon:
+    build: .
+    command: ["make", "daemon"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - "shared-data:/opt/pymirror/data"
+
+  app:
+    build: .
+    command: ["make", "local"]
+    volumes:
+      - "shared-data:/opt/pymirror/data"
