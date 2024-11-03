@@ -3,4 +3,5 @@ venv
 playground
 __pycache__
 *.db
+*.duckdb
 *.egg-info

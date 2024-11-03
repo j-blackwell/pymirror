@@ -9,7 +9,7 @@ setup(
         "fastapi[all]",
         "uvicorn[standard]",
         "jinja2",
-        "numpy",
+        "numpy<2",
         "pandas",
         "requests",
         "selenium",
@@ -18,7 +18,8 @@ setup(
         "html5lib",
         "beautifulsoup4",
         "glom",
-        "apscheduler"
+        "apscheduler",
+        "duckdb",
     ],
     author="James Robinson",
     license="Apache-2.0",
