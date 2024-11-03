@@ -1,0 +1,40 @@
+[project]
+name = "pymirror"
+license = { text = "Apache-2.0" }
+description = "Python smart mirror / home dashboard."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+        "fastapi[all]",
+        "uvicorn[standard]",
+        "jinja2",
+        "numpy<2",
+        "pandas",
+        "requests",
+        "selenium",
+        "webdriver-manager",
+        "lxml",
+        "html5lib",
+        "beautifulsoup4",
+        "glom",
+        "apscheduler",
+        "duckdb",
+]
+version = "1!0+dev"
+
+[project.optional-dependencies]
+nvim = ["pynvim"]
+ipython = ["ipython"]
+
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages]
+find = {}
+
+[tool.uv]
+package = true
+
+[tool.uv.workspace]
+members = ["pymirror"]
