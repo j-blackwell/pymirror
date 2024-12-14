@@ -1,16 +1,14 @@
-import os
-import datetime as dt
+import json
 from pathlib import Path
 from typing import Any, Optional, Sequence, Type, Union
 import dagster as dg
 from dagster._core.storage.db_io_manager import DbIOManager, DbTypeHandler
 from dagster_duckdb.io_manager import DuckDbClient
-import pandas as pd
 from dagster_duckdb import DuckDBIOManager
-from dagster_duckdb_pandas.duckdb_pandas_type_handler import DuckDBPandasTypeHandler
-from dagster_duckdb_polars.duckdb_polars_type_handler import DuckDBPolarsTypeHandler
 
 
+class HTML(str):
+    pass
 
 def build_custom_duckdb_io_manager(
     type_handlers: Sequence[DbTypeHandler],
@@ -54,6 +52,7 @@ class LocalHtmlIOManager(dg.UPathIOManager):
         context.add_output_metadata(
             {
                 "path": dg.PathMetadataValue(path),
+                "preview": dg.MarkdownMetadataValue(obj),
             }
         )
 
@@ -81,13 +80,35 @@ class LocalHtmlIOManager(dg.UPathIOManager):
 def local_html_io_manager(init_context):
     return LocalHtmlIOManager(init_context.resource_config["base_dir"])
 
-resources = {
-    "io_manager": build_custom_duckdb_io_manager(
-        type_handlers=[
-            DuckDBPandasTypeHandler(),
-            DuckDBPolarsTypeHandler(),
-        ],
-        default_load_type=pd.DataFrame,
-    ).configured({"database": {"env": "SQLITE"}}),
-    "html_io_manager": local_html_io_manager.configured({"base_dir": {"env": "LOCAL_DIR"}})
-}
+class LocalJsonIOManager(LocalHtmlIOManager):
+    extension: Optional[str] = ".json"
+
+    def dump_to_path(self, context, obj: Any, path: Path):
+        self.make_directory(path.parent)
+
+        context.log.debug(f"Writing content to {path}")
+        with open(path, "w") as f:
+            json.dump(obj, f)
+
+        context.add_output_metadata(
+            {
+                "path": dg.PathMetadataValue(path),
+            }
+        )
+
+    def load_from_path(self, context: dg.InputContext, path: Path):
+        context.log.debug(f"Reading content from {path}")
+        with open(path, "r") as f:
+            obj = json.load(f)
+
+        return obj
+
+
+@dg.io_manager(
+    config_schema={
+        "base_dir": dg.Field(dg.StringSource),
+    },
+)
+def local_json_io_manager(init_context):
+    return LocalJsonIOManager(init_context.resource_config["base_dir"])
+

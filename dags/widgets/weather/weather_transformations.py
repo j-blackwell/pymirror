@@ -1,12 +1,10 @@
+import pandas as pd
 import datetime as dt
 import json
-import os
 import urllib
 
 import requests
 from dotenv import dotenv_values
-from resources.sqlite import update_sql_widget
-from widgets.weather.weather_html import weather_current_html
 
 env = dotenv_values()
 WEATHER_API_KEY = env["WEATHER_API_KEY"]
@@ -15,14 +13,7 @@ WEATHER_LON = env["WEATHER_LON"]
 DESIRED_FIELDS = ["feels_like", "weather", "uvi", "pop"]
 
 
-def update_weather():
-    raw_weather = get_weather()
-    current_df, daily_df = transform_weather(raw_weather)
-    update_sql_widget("weather_current", current_df, weather_current_html)
-    update_sql_widget("weather_daily", daily_df, pd.DataFrame.to_html, index=False)
-
-
-def get_weather():
+def get_weather_raw():
     base_url = "https://api.openweathermap.org/data/3.0/onecall?"
     params = {
         "lat": WEATHER_LAT,
@@ -35,7 +26,6 @@ def get_weather():
     query = base_url + urllib.parse.urlencode(params)
     r = requests.get(query)
     weather = json.loads(r.text)
-
     return weather
 
 
@@ -46,7 +36,6 @@ def extract_desired(data, desired_fields=DESIRED_FIELDS):
     }
 
 
-import pandas as pd
 
 
 def process_weather(weather):
@@ -77,12 +66,14 @@ def process_weather(weather):
     )
     return df
 
-
-def transform_weather(raw_weather):
-    current_weather = extract_desired(raw_weather["current"])
+def transform_weather_daily(raw_weather):
     daily_weather = [extract_desired(x) for x in raw_weather["daily"]]
+    return process_weather(daily_weather)
 
-    return process_weather(current_weather), process_weather(daily_weather)
+
+def transform_weather_current(raw_weather):
+    current_weather = extract_desired(raw_weather["current"])
+    return process_weather(current_weather)
 
 
 if __name__ == "__main__":

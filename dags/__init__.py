@@ -1,13 +1,23 @@
 import dagster as dg
-import pandas as pd
-from dags.resources import resources
 
-@dg.asset(io_manager_key="html_io_manager")
-def test_asset() -> str:
-    return ""
+from dags.resources.definitions import resources
+from dags.widgets.bins import bins_assets
+from dags.widgets.football import football_assets
+from dags.widgets.tfl import tfl_assets
+from dags.widgets.weather import weather_assets
+
+assets = dg.load_assets_from_modules(
+    [
+        bins_assets,
+        football_assets,
+        tfl_assets,
+        weather_assets,
+    ]
+)
+
 
 defs = dg.Definitions(
-    assets=[test_asset],
+    assets=assets,
     resources=resources,
     jobs=[],
     schedules=[],
