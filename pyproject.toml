@@ -24,6 +24,7 @@ dependencies = [
         "dagster-duckdb>=0.25.3",
         "dagster-duckdb-pandas>=0.25.3",
         "dagster-duckdb-polars>=0.25.3",
+        "ipython>=8.29.0",
 ]
 version = "1!0+dev"
 
