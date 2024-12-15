@@ -5,7 +5,6 @@ import requests
 from glom import glom
 from dotenv import dotenv_values
 
-from resources.sqlite import update_sql_widget
 from dags.widgets.tfl.helpers import convert_tfl_dates
 from dags.widgets.tfl.tfl_html import status_html
 

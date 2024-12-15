@@ -10,7 +10,6 @@ from dags.widgets.football.football_transformations import (
     transform_football_matches,
     transform_football_result_comparison_html,
 )
-from resources.sqlite import update_sql_widget
 
 
 @dg.multi_asset(outs={

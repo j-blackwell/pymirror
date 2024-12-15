@@ -4,7 +4,6 @@ from itertools import chain
 import pandas as pd
 import requests
 from dotenv import dotenv_values
-from resources.sqlite import update_sql_widget
 from dags.widgets.tfl.helpers import convert_tfl_dates
 from dags.widgets.tfl.tfl_html import departures_html
 
