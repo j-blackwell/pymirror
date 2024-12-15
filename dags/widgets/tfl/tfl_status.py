@@ -5,19 +5,16 @@ import requests
 from glom import glom
 from dotenv import dotenv_values
 
-from resources.sqlite import update_sql_widget
-from widgets.tfl.helpers import convert_tfl_dates
-from widgets.tfl.tfl_html import status_html
+from dags.widgets.tfl.helpers import convert_tfl_dates
+from dags.widgets.tfl.tfl_html import status_html
 
 env = dotenv_values()
 TFL_LINE_IDS = env["TFL_LINE_IDS"]
 TIMEZONE = env["TIMEZONE"]
 
 
-def update_tfl_status():
-    line_status_info = get_tfl_status(TFL_LINE_IDS)
-    line_status_df = transform_tfl_status(line_status_info)
-    update_sql_widget("tfl_status", line_status_df, status_html)
+def get_tfl_status_raw() -> list:
+    return get_tfl_status(TFL_LINE_IDS)
 
 
 def get_tfl_status(line_ids):
@@ -70,7 +67,3 @@ def transform_tfl_status(line_status):
         .assign(validity_to=lambda df: convert_tfl_dates(df["validity_to"]))
     )
     return df
-
-
-if __name__ == "__main__":
-    update_tfl_status()

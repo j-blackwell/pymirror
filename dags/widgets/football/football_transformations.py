@@ -1,36 +1,19 @@
-import pandas as pd
-import numpy as np
 import os
-import requests
 import re
+
+import numpy as np
+import pandas as pd
+import requests
 from bs4 import BeautifulSoup
 from dotenv import dotenv_values
-from resources.sqlite import update_sql_widget
-from widgets.football.football_html import (
-    football_latest_result_html,
-    football_next_fixture_html,
-)
+
+from dags.resources.io_managers import HTML
 
 TEAM_ID = dotenv_values()["TEAM_ID"]
-
 POINTS_MAPPING = {"W": 3, "D": 1, "L": 0}
-
-
-def update_football_matches():
-    matches, matches_prev = get_football_matches()
-    latest_result, next_fixture, result_comparison = transform_football_matches(
-        matches, matches_prev
-    )
-    update_sql_widget(
-        "football_latest_result", latest_result, football_latest_result_html
-    )
-    update_sql_widget("football_next_fixture", next_fixture, football_next_fixture_html)
-    update_sql_widget(
-        "football_result_comparison",
-        result_comparison,
-        pd.DataFrame.to_html,
-        index=False,
-    )
+IMAGES = {
+    "Brentford": "https://www.vectorkhazana.com/assets/images/products/Brentford_fc_Black.png"
+}
 
 
 def get_team_matches(url):
@@ -76,7 +59,7 @@ def transform_football_matches(matches, matches_prev):
     )
 
     result_comparison = (
-        matches_prev        .merge(
+        matches_prev.merge(
             matches,
             how="right",
             left_on=["Comp", "Venue", "Opponent"],
@@ -137,5 +120,50 @@ def transform_football_matches(matches, matches_prev):
     return latest_result, next_fixture, result_comparison
 
 
-if __name__ == "__main__":
-    update_football_matches()
+def transform_football_latest_result_html(df: pd.DataFrame) -> HTML:
+    row = df.iloc[0]
+    html_all = f"""<div class="football">
+    <h3>Latest Result</h3>
+    <div class="home-team">
+        <span>{row["home_team"]}</span>
+        <span><img src={IMAGES.get(row["home_team"])} width="50" id="{IMAGES.get(row["home_team"])}"></span>
+    </div>
+    <div class="score">
+        <span>{row["home_g"]}</span>
+        <span>({row["home_xg"]} - {row["away_xg"]})</span>
+        <span>{row["away_g"]}</span>
+    </div>
+    <div class="away-team">
+        <span>{row["away_team"]}</span>
+        <span><img src={IMAGES.get(row["away_team"])} width="50" id="{IMAGES.get(row["away_team"])}"></span>
+    </div>
+    </div>
+    """
+
+    return HTML(html_all)
+
+
+def transform_football_next_fixture_html(df: pd.DataFrame) -> HTML:
+    row = df.iloc[0]
+    html_all = f"""<div class="football">
+    <h3>Next Fixture</h3>
+    <div class="home-team">
+        <span>{row["home_team"]}</span>
+        <span><img src={IMAGES.get(row["home_team"])} width="50" id="{IMAGES.get(row["home_team"])}"></span>
+    </div>
+    <div class="preview">
+        <span>{row["datetime"]}</span>
+        <span>{row["form"]}</span>
+        <span>Last time: {row["Result_prev"]}</span>
+    </div>
+    <div class="away-team">
+        <span>{row["away_team"]}</span>
+        <span><img src={IMAGES.get(row["away_team"])} width="50" id="{IMAGES.get(row["away_team"])}"></span>
+    </div>
+    </div>
+    """
+
+    return HTML(html_all)
+
+def transform_football_result_comparison_html(df: pd.DataFrame) -> HTML:
+    return HTML(df.to_html(index=False))

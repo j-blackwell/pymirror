@@ -2,6 +2,7 @@
 .venv
 playground
 __pycache__
+tmp
 *.db
 *.duckdb
 *.egg-info

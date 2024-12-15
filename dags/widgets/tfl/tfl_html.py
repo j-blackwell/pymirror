@@ -1,8 +1,10 @@
 import pandas as pd
 import datetime as dt
 
+from dags.resources.io_managers import HTML
 
-def departures_html(df: pd.DataFrame) -> str:
+
+def departures_html(df: pd.DataFrame) -> HTML:
     df_sorted = (
         df.loc[
             lambda df: pd.to_datetime(df["expectedArrival"])
@@ -15,7 +17,7 @@ def departures_html(df: pd.DataFrame) -> str:
     )
 
     if df_sorted.shape[0] == 0:
-        return "<h4>No departures</h4>"
+        return HTML("<h4>No departures</h4>")
 
     df_grouped = df_sorted.groupby(["lineName"])
 
@@ -29,10 +31,10 @@ def departures_html(df: pd.DataFrame) -> str:
 
         html_all += html
 
-    return html_all
+    return HTML(html_all)
 
 
-def status_html(df: pd.DataFrame) -> str:
+def status_html(df: pd.DataFrame) -> HTML:
     html_all = "<h3>Status</h3>\n<ul>"
     for idx, row in df.iterrows():
         html_all += f"\n<li>{row['line']} - {row['status']}"
@@ -46,4 +48,4 @@ def status_html(df: pd.DataFrame) -> str:
             # </ul>"""
             html_all += "</li>"
 
-    return html_all
+    return HTML(html_all)

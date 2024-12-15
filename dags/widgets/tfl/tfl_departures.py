@@ -4,23 +4,21 @@ from itertools import chain
 import pandas as pd
 import requests
 from dotenv import dotenv_values
-from resources.sqlite import update_sql_widget
-from widgets.tfl.helpers import convert_tfl_dates
-from widgets.tfl.tfl_html import departures_html
+from dags.widgets.tfl.helpers import convert_tfl_dates
+from dags.widgets.tfl.tfl_html import departures_html
 
 env = dotenv_values()
 TFL_API_KEY = env["TFL_API_KEY"]
 TFL_STOP_POINT_IDS = env["TFL_STOP_POINT_IDS"].split(",")
 
 
-def update_tfl_departures():
+def get_tfl_departures_raw() -> list:
     departures = [
         get_tfl_departures(station.split(":")[0], station.split(":")[1])
         for station in TFL_STOP_POINT_IDS
     ]
     departures_list = list(chain.from_iterable(departures))
-    departures_df = transform_tfl_departures(departures_list)
-    update_sql_widget("tfl_departures", departures_df, departures_html)
+    return departures_list
 
 
 def get_tfl_departures(station_id, direction):
@@ -88,7 +86,3 @@ def transform_tfl_departures(departures):
     )
 
     return df
-
-
-if __name__ == "__main__":
-    update_tfl_departures()

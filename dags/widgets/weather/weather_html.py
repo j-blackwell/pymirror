@@ -1,7 +1,9 @@
 import pandas as pd
 
+from dags.resources.io_managers import HTML
 
-def weather_current_html(df: pd.DataFrame) -> str:
+
+def transform_weather_current_html(df: pd.DataFrame) -> HTML:
     html_all = "<h3>Current Weather</h3>\n<ul>"
     for idx, row in df.iterrows():
         html_all += f"\n<li>Weather - {row['weather_main']}</li>"
@@ -11,8 +13,8 @@ def weather_current_html(df: pd.DataFrame) -> str:
 
     html_all += "</ul>"
 
-    return html_all
+    return HTML(html_all)
 
 
-def weather_daily_html(df: pd.DataFrame) -> str:
-    ...
+def transform_weather_daily_html(df: pd.DataFrame) -> HTML:
+    return HTML(df.to_html(index=False))
